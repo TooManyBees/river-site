@@ -1,9 +1,23 @@
 require 'json'
 require 'httpclient'
+require 'fileutils'
 
+PAGE_NAMES = %w{
+  /index /about /404
+}
 POST_EXTNAMES = %w{
   .html .markdown .mkdown .mkdn .mkd .md
 }
+def path_for_file(name)
+  pagename = File.join(File.dirname(name), File.basename(name, File.extname(name)))
+  if PAGE_NAMES.include?(pagename)
+    File.join(".", "app", name)
+  elsif POST_EXTNAMES.include?(File.extname(name))
+    File.join(".", "app", "_posts", name)
+  else
+    File.join(".", "app", name)
+  end
+end
 
 AUTH = ENV['DROPBOX_ACCESS_TOKEN'] || begin
   require 'dotenv/load'
@@ -56,13 +70,8 @@ if list_response.ok?
   .map do |(name, connection)|
     response = connection.pop
     if response.ok?
-      is_post = POST_EXTNAMES.include?(File.extname(name))
       STDERR.putc "."
-      filename = if is_post
-        File.join(".", "app", "_posts", name)
-      else
-        File.join(".", "app", name)
-      end
+      filename = path_for_file(name)
       FileUtils.mkdir_p(File.dirname(filename))
       File.open(filename, "w") do |f|
         IO.copy_stream(response.body, f)
