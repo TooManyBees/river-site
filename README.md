@@ -3,7 +3,7 @@
 Based almost completely on jimniels's [netlibox](https://github.com/jimniels/netlibox/) template, with modifications:
 
 * lambda function verifies the Dropbox signature before triggering build (were we... were we just gonna go on honor system here???)
-* no NPM needed
+* no NPM or Babel needed
     * the lambda function, is valid Node 8 LTS
     * fetching dropbox content is done in ruby, since we're using it for Jekyll anyway
     * thank heavens
@@ -49,3 +49,9 @@ Back in Dropbox app settings:
     8:07:43 AM: dropbox-webhook invoked
     8:07:43 AM: Echoing challenge 2_mLAgJwloCKup6nTktFXFA131c2ycyJmjtzd_Rc9HY
     ```
+
+# Usage
+
+In Dropbox, upload files to the app folder using the same directory structure that Jekyll expects (remembering to put posts in a `_posts` folder). You can overwrite `index.md`, `about.md`, `404.html`, or any other page in the repo, even if the extensions differ.
+
+The app will rebuild on changes to the Dropbox app folder or the source repo.
