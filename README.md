@@ -7,7 +7,7 @@ Based almost completely on jimniels's [netlibox](https://github.com/jimniels/net
     * the lambda function, is valid Node 8 LTS
     * fetching dropbox content is done in ruby, since we're using it for Jekyll anyway
     * thank heavens
-* files that are have an html or markdown extension are added as posts, while other files are added as static assets. The list of extension of files that count as posts can be changed in [dropbox.rb](/dropbox.rb) with the constant `POST_EXTNAMES`
+* downloaded pages will clobber duplicate files that already exist in the repo, even if they have different extensions like `.md` and `.markdown`. (The list of extensions is defined in `dropbox.rb`'s `POST_EXTNAMES` constant.)
 
 # Setup
 

@@ -2,20 +2,16 @@ require 'json'
 require 'httpclient'
 require 'fileutils'
 
-PAGE_NAMES = %w{
-  /index /about /404
-}
 POST_EXTNAMES = %w{
   .html .markdown .mkdown .mkdn .mkd .md
 }
-def path_for_file(name)
-  pagename = File.join(File.dirname(name), File.basename(name, File.extname(name)))
-  if PAGE_NAMES.include?(pagename)
-    File.join(".", "app", name)
-  elsif POST_EXTNAMES.include?(File.extname(name))
-    File.join(".", "app", "_posts", name)
-  else
-    File.join(".", "app", name)
+def clobber_existing(assets)
+  names = assets.map do |(name, _)|
+    File.join(File.dirname(name), File.basename(name, File.extname(name)))
+  end.uniq
+  names.each do |name|
+    existing = Dir.glob("#{name}{#{POST_EXTNAMES.join(",")}}")
+    existing.each { |filename| File.delete(filename) }
   end
 end
 
@@ -57,7 +53,7 @@ if list_response.ok?
   .map do |entry|
     name = entry['path_lower']
     [
-      name,
+      File.join(".", name),
       http_client.post_async(
         "https://content.dropboxapi.com/2/files/download",
         header: {
@@ -71,15 +67,19 @@ if list_response.ok?
     response = connection.pop
     if response.ok?
       STDERR.putc "."
-      filename = path_for_file(name)
-      FileUtils.mkdir_p(File.dirname(filename))
-      File.open(filename, "w") do |f|
-        IO.copy_stream(response.body, f)
-      end
+      [name, response.body]
     else
       STDERR.print "\nError: couldn't download #{File.basename(name)} (#{response.status})\n    "
       IO.copy_stream(response.body, STDERR)
       STDERR.puts
+    end
+  end
+  .compact
+  .tap { |assets| clobber_existing(assets) }
+  .each do |(name, body)|
+    FileUtils.mkdir_p(File.dirname(name))
+    File.open(name, "w") do |f|
+      IO.copy_stream(body, f)
     end
   end
   STDERR.puts
